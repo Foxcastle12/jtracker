@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#071a45">
+  <title>Coryat Tracker</title>
+  <style>
+    :root {
+      --blue:#071a45; --blue2:#0b2b73; --gold:#d6ad3c; --cream:#f7f5ef;
+      --ink:#111827; --muted:#667085; --line:#d9dde5; --good:#167647;
+      --bad:#b42318; --card:#fff;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input{font:inherit}
+    button{touch-action:manipulation}
+    .app{max-width:680px;margin:0 auto;min-height:100vh;padding:env(safe-area-inset-top) 16px calc(88px + env(safe-area-inset-bottom))}
+    header{padding:18px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{font-weight:800;letter-spacing:.02em;color:var(--blue);font-size:20px}
+    .season{font-size:13px;color:var(--muted)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:28px;margin-bottom:8px}
+    h2{font-size:20px;margin-bottom:14px}
+    .muted{color:var(--muted)}
+    .score{text-align:center;padding:18px 0 22px}
+    .score .label{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);font-weight:700}
+    .score .number{font-size:58px;line-height:1.05;font-weight:850;letter-spacing:-.04em;color:var(--blue);font-variant-numeric:tabular-nums}
+    .round{text-align:center;font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:2px 0 14px;color:var(--blue)}
+    .values{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .values button:last-child:nth-child(odd){grid-column:1/-1}
+    .value,.choice,.primary,.secondary,.danger{border:0;border-radius:14px;min-height:64px;font-weight:800;cursor:pointer}
+    .value{background:var(--blue);color:#fff;font-size:25px}
+    .value:active{transform:scale(.98)}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .choice{font-size:20px;color:white}
+    .correct{background:var(--good)}
+    .wrong{background:var(--bad)}
+    .cancel{margin-top:10px;width:100%;background:transparent;border:1px solid var(--line);border-radius:12px;min-height:48px;color:var(--muted);font-weight:700}
+    .actions{display:flex;gap:10px;margin-top:16px}
+    .actions>*{flex:1}
+    .primary{background:var(--blue);color:#fff;padding:0 16px}
+    .secondary{background:#fff;border:1px solid var(--line);color:var(--ink);padding:0 16px}
+    .danger{background:#fff;border:1px solid #f0b7b3;color:var(--bad);padding:0 16px}
+    .small{min-height:48px;font-size:14px}
+    label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+    input{width:100%;min-height:52px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:white;font-size:18px}
+    .field{margin-bottom:16px}
+    .meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:4px}
+    .pill{background:#eef1f6;border-radius:999px;padding:5px 9px}
+    .hidden{display:none!important}
+    .nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:10}
+    .nav-inner{width:min(680px,100%);display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .nav button{border:0;background:transparent;min-height:48px;border-radius:12px;font-weight:750;color:var(--muted)}
+    .nav button.active{background:#eef1f6;color:var(--blue)}
+    .list{display:grid;gap:10px}
+    .game-row{width:100%;text-align:left;background:white;border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+    .game-row strong{font-size:17px}.game-row .big{font-size:21px;color:var(--blue);font-weight:850;font-variant-numeric:tabular-nums}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat{background:white;border:1px solid var(--line);border-radius:14px;padding:14px}
+    .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+    .stat .v{font-size:25px;font-weight:850;color:var(--blue);margin-top:4px}
+    .attempts{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+    .attempt-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef0f3;font-size:14px}
+    .plus{color:var(--good);font-weight:800}.minus{color:var(--bad);font-weight:800}
+    .final-buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+    .final-buttons button{min-height:90px;font-size:20px}
+    .toast{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#111827;color:white;padding:9px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
+    .toast.show{opacity:1}
+    .empty{text-align:center;color:var(--muted);padding:28px 8px}
+    @media(min-width:520px){.values{grid-template-columns:repeat(5,1fr)}.values button:last-child:nth-child(odd){grid-column:auto}.value{font-size:19px}.score .number{font-size:68px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header><div class="brand">CORYAT</div><div class="season" id="seasonBadge"></div></header>
+
+  <main id="homeView">
+    <section class="card">
+      <h1>Coryat Tracker</h1>
+      <p class="muted">Track each attempted clue, your Coryat, and Final Jeopardy performance.</p>
+      <button class="primary" style="width:100%" id="newGameBtn">New Game</button>
+    </section>
+    <section style="margin-top:16px" id="recentHome"></section>
+  </main>
+
+  <main id="newView" class="hidden">
+    <section class="card">
+      <h2>New Game</h2>
+      <div class="field"><label for="episodeInput">Official episode number</label><input id="episodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 9274"></div>
+      <div class="field"><label for="dateInput">Date played</label><input id="dateInput" type="date"></div>
+      <button class="primary" style="width:100%" id="startBtn">Start Jeopardy Round</button>
+      <button class="cancel" id="cancelNew">Cancel</button>
+    </section>
+  </main>
+
+  <main id="playView" class="hidden">
+    <div class="meta"><span class="pill" id="episodeMeta"></span><span class="pill" id="dateMeta"></span></div>
+    <div class="score"><div class="label">Coryat</div><div class="number" id="score">$0</div></div>
+    <div class="round" id="roundLabel">Jeopardy!</div>
+    <section id="valuePanel">
+      <div class="values" id="values"></div>
+    </section>
+    <section id="resultPanel" class="hidden">
+      <div class="choices">
+        <button class="choice correct" id="correctBtn"></button>
+        <button class="choice wrong" id="wrongBtn"></button>
+      </div>
+      <button class="cancel" id="cancelResult">Cancel</button>
+    </section>
+    <div class="actions">
+      <button class="secondary small" id="undoBtn">Undo</button>
+      <button class="primary small" id="nextRoundBtn">Double Jeopardy →</button>
+    </div>
+  </main>
+
+  <main id="finalView" class="hidden">
+    <div class="meta"><span class="pill" id="finalEpisode"></span></div>
+    <div class="score"><div class="label">Final Coryat</div><div class="number" id="finalScore"></div></div>
+    <section class="card">
+      <h2 style="text-align:center">Final Jeopardy</h2>
+      <p class="muted" style="text-align:center">Final does not change your Coryat.</p>
+      <div class="final-buttons">
+        <button class="choice correct" id="finalCorrect">Correct</button>
+        <button class="choice wrong" id="finalWrong">Incorrect</button>
+      </div>
+    </section>
+  </main>
+
+  <main id="historyView" class="hidden">
+    <h1>History</h1><div class="list" id="historyList"></div>
+  </main>
+
+  <main id="detailView" class="hidden"></main>
+
+  <main id="statsView" class="hidden">
+    <h1>Stats</h1><div id="statsContent"></div>
+  </main>
+
+  <main id="settingsView" class="hidden">
+    <section class="card">
+      <h2>Settings</h2>
+      <div class="field"><label for="seasonInput">Current season</label><input id="seasonInput" inputmode="numeric" pattern="[0-9]*"></div>
+      <button class="primary" style="width:100%" id="saveSeason">Save Season</button>
+    </section>
+    <section class="card" style="margin-top:16px">
+      <h2>Data</h2>
+      <p class="muted">Your game history is stored on this device in this browser.</p>
+      <button class="secondary small" style="width:100%" id="exportBtn">Export JSON Backup</button>
+    </section>
+  </main>
+</div>
+
+<div class="nav" id="nav"><div class="nav-inner">
+  <button data-view="homeView" class="active">Play</button>
+  <button data-view="historyView">History</button>
+  <button data-view="statsView">Stats</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  "use strict";
+  const KEY="coryatTracker.v01";
+  const $=id=>document.getElementById(id);
+  const views=["homeView","newView","playView","finalView","historyView","detailView","statsView","settingsView"];
+  let state=load();
+  let current=null, selectedValue=null;
+
+  function load(){
+    try{
+      const x=JSON.parse(localStorage.getItem(KEY));
+      if(x && Array.isArray(x.games)) return x;
+    }catch(e){}
+    return {season:"",games:[]};
+  }
+  function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+  function money(n){return (n<0?"-":"")+"$"+Math.abs(n).toLocaleString()}
+  function todayLocal(){
+    const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  function prettyDate(s){
+    if(!s)return "";
+    const [y,m,d]=s.split("-").map(Number);
+    return new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(y,m-1,d));
+  }
+  function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),650)}
+  function show(id){
+    views.forEach(v=>$(v).classList.toggle("hidden",v!==id));
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",(id==="newView"||id==="playView"||id==="finalView"||id==="detailView" ? "homeView":id)===b.dataset.view));
+    $("nav").classList.toggle("hidden",id==="playView"||id==="finalView");
+    if(id==="homeView")renderHome();
+    if(id==="historyView")renderHistory();
+    if(id==="statsView")renderStats();
+    window.scrollTo(0,0);
+  }
+  function seasonText(){return state.season ? `Season ${state.season}` : "Set season"}
+  function refreshSeason(){$("seasonBadge").textContent=seasonText()}
+  $("seasonBadge").addEventListener("click",()=>{ $("seasonInput").value=state.season; show("settingsView") });
+
+  function renderHome(){
+    refreshSeason();
+    const games=[...state.games].sort((a,b)=>b.completedAt.localeCompare(a.completedAt));
+    $("recentHome").innerHTML=games.length
+      ? `<h2>Recent</h2>${games.slice(0,3).map(gameRow).join("")}`
+      : `<div class="empty">No completed games yet.</div>`;
+    bindGameRows($("recentHome"));
+  }
+  function gameRow(g){
+    const c=g.attempts.filter(a=>a.correct).length, w=g.attempts.length-c;
+    return `<button class="game-row" data-game="${g.id}">
+      <span><strong>Episode ${esc(g.episode)}</strong><br><span class="muted">${prettyDate(g.playDate)} · S${esc(g.season)}</span></span>
+      <span class="big">${money(g.coryat)}</span>
+      <span class="muted">${c} correct · ${w} incorrect</span>
+      <span class="${g.finalCorrect?"plus":"minus"}">FJ ${g.finalCorrect?"✓":"✕"}</span>
+    </button>`;
+  }
+  function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  function bindGameRows(root){root.querySelectorAll("[data-game]").forEach(b=>b.addEventListener("click",()=>renderDetail(b.dataset.game)))}
+
+  $("newGameBtn").addEventListener("click",()=>{
+    if(!state.season){$("seasonInput").value="";show("settingsView");toast("Set the current season first");return}
+    $("episodeInput").value="";$("dateInput").value=todayLocal();show("newView");setTimeout(()=>$("episodeInput").focus(),0);
+  });
+  $("cancelNew").addEventListener("click",()=>show("homeView"));
+  $("startBtn").addEventListener("click",()=>{
+    const ep=$("episodeInput").value.trim(), date=$("dateInput").value;
+    if(!/^\d+$/.test(ep)){toast("Enter an episode number");return}
+    if(!date){toast("Choose a play date");return}
+    current={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),season:String(state.season),episode:ep,playDate:date,round:"J",coryat:0,attempts:[],startedAt:new Date().toISOString()};
+    renderPlay();
+  });
+
+  function renderPlay(){
+    show("playView");
+    $("episodeMeta").textContent=`Episode ${current.episode}`;
+    $("dateMeta").textContent=prettyDate(current.playDate);
+    $("score").textContent=money(current.coryat);
+    $("roundLabel").textContent=current.round==="J"?"Jeopardy!":"Double Jeopardy!";
+    $("nextRoundBtn").textContent=current.round==="J"?"Double Jeopardy →":"Final Jeopardy →";
+    $("undoBtn").disabled=current.attempts.length===0;
+    selectedValue=null; $("valuePanel").classList.remove("hidden");$("resultPanel").classList.add("hidden");
+    const vals=current.round==="J"?[200,400,600,800,1000]:[400,800,1200,1600,2000];
+    $("values").innerHTML=vals.map(v=>`<button class="value" data-value="${v}">$${v.toLocaleString()}</button>`).join("");
+    $("values").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>chooseValue(Number(b.dataset.value))));
+  }
+  function chooseValue(v){
+    selectedValue=v;
+    $("valuePanel").classList.add("hidden");$("resultPanel").classList.remove("hidden");
+    $("correctBtn").textContent=`+$${v.toLocaleString()} Correct`;
+    $("wrongBtn").textContent=`−$${v.toLocaleString()} Incorrect`;
+  }
+  function record(correct){
+    if(!selectedValue)return;
+    const delta=correct?selectedValue:-selectedValue;
+    current.attempts.push({round:current.round,value:selectedValue,correct,delta,sequence:current.attempts.length+1});
+    current.coryat+=delta;
+    $("score").textContent=money(current.coryat);
+    $("undoBtn").disabled=false;
+    selectedValue=null;$("resultPanel").classList.add("hidden");$("valuePanel").classList.remove("hidden");
+  }
+  $("correctBtn").addEventListener("click",()=>record(true));
+  $("wrongBtn").addEventListener("click",()=>record(false));
+  $("cancelResult").addEventListener("click",()=>{selectedValue=null;$("resultPanel").classList.add("hidden");$("valuePanel").classList.remove("hidden")});
+  $("undoBtn").addEventListener("click",()=>{
+    if(!current.attempts.length)return;
+    const a=current.attempts.pop();current.coryat-=a.delta;$("score").textContent=money(current.coryat);$("undoBtn").disabled=current.attempts.length===0;toast("Last attempt removed");
+  });
+  $("nextRoundBtn").addEventListener("click",()=>{
+    if(current.round==="J"){current.round="DJ";renderPlay()}
+    else renderFinal();
+  });
+  function renderFinal(){
+    show("finalView");$("finalEpisode").textContent=`Episode ${current.episode}`;$("finalScore").textContent=money(current.coryat);
+  }
+  function finish(finalCorrect){
+    current.finalCorrect=finalCorrect;current.completedAt=new Date().toISOString();delete current.round;
+    state.games.push(current);save();const id=current.id;current=null;renderDetail(id);
+  }
+  $("finalCorrect").addEventListener("click",()=>finish(true));
+  $("finalWrong").addEventListener("click",()=>finish(false));
+
+  function renderHistory(){
+    const games=[...state.games].sort((a,b)=>b.completedAt.localeCompare(a.completedAt));
+    $("historyList").innerHTML=games.length?games.map(gameRow).join(""):`<div class="empty">No completed games yet.</div>`;
+    bindGameRows($("historyList"));
+  }
+  function renderDetail(id){
+    const g=state.games.find(x=>x.id===id);if(!g)return;
+    const j=g.attempts.filter(a=>a.round==="J"), dj=g.attempts.filter(a=>a.round==="DJ");
+    const sum=a=>a.reduce((s,x)=>s+x.delta,0), correct=a=>a.filter(x=>x.correct).length;
+    const rows=g.attempts.map(a=>`<div class="attempt-row"><span>${a.round==="J"?"J":"DJ"} · $${a.value.toLocaleString()}</span><span class="${a.correct?"plus":"minus"}">${a.correct?"+":"−"}$${a.value.toLocaleString()}</span></div>`).join("");
+    $("detailView").innerHTML=`<button class="secondary small" id="backHistory">← Back</button>
+      <div class="score"><div class="label">Episode ${esc(g.episode)} · ${prettyDate(g.playDate)}</div><div class="number">${money(g.coryat)}</div></div>
+      <div class="stats-grid">
+        <div class="stat"><div class="k">Jeopardy</div><div class="v">${money(sum(j))}</div></div>
+        <div class="stat"><div class="k">Double Jeopardy</div><div class="v">${money(sum(dj))}</div></div>
+        <div class="stat"><div class="k">Attempts</div><div class="v">${g.attempts.length}</div></div>
+        <div class="stat"><div class="k">Accuracy</div><div class="v">${g.attempts.length?Math.round(correct(g.attempts)/g.attempts.length*100):0}%</div></div>
+        <div class="stat"><div class="k">Final Jeopardy</div><div class="v">${g.finalCorrect?"Correct":"Incorrect"}</div></div>
+        <div class="stat"><div class="k">Season</div><div class="v">${esc(g.season)}</div></div>
+      </div>
+      <section class="card attempts"><h2>Attempts</h2>${rows||'<p class="muted">No attempts recorded.</p>'}</section>
+      <button class="danger small" style="width:100%;margin-top:16px" id="deleteGame">Delete Game</button>`;
+    show("detailView");
+    $("backHistory").addEventListener("click",()=>show("historyView"));
+    $("deleteGame").addEventListener("click",()=>{if(confirm(`Delete Episode ${g.episode}?`)){state.games=state.games.filter(x=>x.id!==id);save();show("historyView")}});
+  }
+
+  function renderStats(){
+    const gs=state.games;
+    if(!gs.length){$("statsContent").innerHTML=`<div class="empty">Complete a game to start building statistics.</div>`;return}
+    const scores=gs.map(g=>g.coryat), attempts=gs.flatMap(g=>g.attempts);
+    const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    const correct=attempts.filter(a=>a.correct).length;
+    const fj=gs.filter(g=>g.finalCorrect).length;
+    const recent=[...gs].sort((a,b)=>b.completedAt.localeCompare(a.completedAt)).slice(0,10);
+    const rAvg=Math.round(recent.reduce((s,g)=>s+g.coryat,0)/recent.length);
+    const valueStats={};
+    attempts.forEach(a=>{const k=`${a.round}-${a.value}`;valueStats[k]??={round:a.round,value:a.value,n:0,c:0};valueStats[k].n++;if(a.correct)valueStats[k].c++});
+    const byValue=Object.values(valueStats).sort((a,b)=>a.round.localeCompare(b.round)||a.value-b.value).map(x=>`<div class="attempt-row"><span>${x.round==="J"?"J":"DJ"} $${x.value.toLocaleString()}</span><span><strong>${x.c}/${x.n}</strong> · ${Math.round(x.c/x.n*100)}%</span></div>`).join("");
+    $("statsContent").innerHTML=`<div class="stats-grid">
+      <div class="stat"><div class="k">Games</div><div class="v">${gs.length}</div></div>
+      <div class="stat"><div class="k">Average Coryat</div><div class="v">${money(avg)}</div></div>
+      <div class="stat"><div class="k">Best Coryat</div><div class="v">${money(Math.max(...scores))}</div></div>
+      <div class="stat"><div class="k">Last ${recent.length} Avg</div><div class="v">${money(rAvg)}</div></div>
+      <div class="stat"><div class="k">Clue Accuracy</div><div class="v">${attempts.length?Math.round(correct/attempts.length*100):0}%</div></div>
+      <div class="stat"><div class="k">Final Jeopardy</div><div class="v">${Math.round(fj/gs.length*100)}%</div></div>
+    </div>
+    <section class="card attempts"><h2>By clue value</h2>${byValue}</section>`;
+  }
+
+  $("saveSeason").addEventListener("click",()=>{
+    const s=$("seasonInput").value.trim();if(!/^\d+$/.test(s)){toast("Enter a season number");return}
+    state.season=s;save();refreshSeason();show("homeView");
+  });
+  $("exportBtn").addEventListener("click",()=>{
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`coryat-backup-${todayLocal()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  });
+  document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
+
+  refreshSeason();renderHome();
+})();
+</script>
+</body>
+</html>
