@@ -29,15 +29,15 @@
     .muted{color:var(--muted)}
     .score{text-align:center;padding:18px 0 22px}
     .score .label{text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);font-weight:700}
-    .score .number{font-size:58px;line-height:1.05;font-weight:850;letter-spacing:-.04em;color:var(--blue);font-variant-numeric:tabular-nums}
+    .score .number{font-size:36px;line-height:1.05;font-weight:800;letter-spacing:-.025em;color:var(--blue);font-variant-numeric:tabular-nums}
     .round{text-align:center;font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:2px 0 14px;color:var(--blue)}
-    .values{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .values button:last-child:nth-child(odd){grid-column:1/-1}
-    .value,.choice,.primary,.secondary,.danger{border:0;border-radius:14px;min-height:64px;font-weight:800;cursor:pointer}
-    .value{background:var(--blue);color:#fff;font-size:25px}
+    .values{display:grid;grid-template-columns:1fr;gap:11px}
+    .values button:last-child:nth-child(odd){grid-column:auto}
+    .value,.choice,.primary,.secondary,.danger{border:0;border-radius:14px;min-height:72px;font-weight:800;cursor:pointer}
+    .value{background:var(--blue);color:#fff;font-size:26px;text-align:left;padding:0 24px;min-height:78px}
     .value:active{transform:scale(.98)}
-    .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .choice{font-size:20px;color:white}
+    .choices{display:grid;grid-template-columns:1fr;gap:12px}
+    .choice{font-size:26px;color:white;text-align:left;padding:0 24px;min-height:92px}
     .correct{background:var(--good)}
     .wrong{background:var(--bad)}
     .cancel{margin-top:10px;width:100%;background:transparent;border:1px solid var(--line);border-radius:12px;min-height:48px;color:var(--muted);font-weight:700}
@@ -72,7 +72,7 @@
     .toast{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#111827;color:white;padding:9px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
     .toast.show{opacity:1}
     .empty{text-align:center;color:var(--muted);padding:28px 8px}
-    @media(min-width:520px){.values{grid-template-columns:repeat(5,1fr)}.values button:last-child:nth-child(odd){grid-column:auto}.value{font-size:19px}.score .number{font-size:68px}}
+    @media(min-width:520px){.score .number{font-size:42px}}
   </style>
 </head>
 <body>
@@ -91,7 +91,7 @@
   <main id="newView" class="hidden">
     <section class="card">
       <h2>New Game</h2>
-      <div class="field"><label for="episodeInput">Official episode number</label><input id="episodeInput" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 9274"></div>
+      <div class="field"><label for="episodeInput">Official episode number</label><input id="episodeInput" inputmode="numeric" pattern="[0-9]*"></div>
       <div class="field"><label for="dateInput">Date played</label><input id="dateInput" type="date"></div>
       <button class="primary" style="width:100%" id="startBtn">Start Jeopardy Round</button>
       <button class="cancel" id="cancelNew">Cancel</button>
@@ -110,7 +110,6 @@
         <button class="choice correct" id="correctBtn"></button>
         <button class="choice wrong" id="wrongBtn"></button>
       </div>
-      <button class="cancel" id="cancelResult">Cancel</button>
     </section>
     <div class="actions">
       <button class="secondary small" id="undoBtn">Undo</button>
@@ -247,13 +246,13 @@
     selectedValue=null; $("valuePanel").classList.remove("hidden");$("resultPanel").classList.add("hidden");
     const vals=current.round==="J"?[200,400,600,800,1000]:[400,800,1200,1600,2000];
     $("values").innerHTML=vals.map(v=>`<button class="value" data-value="${v}">$${v.toLocaleString()}</button>`).join("");
-    $("values").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>chooseValue(Number(b.dataset.value))));
+    $("values").querySelectorAll("button").forEach(b=>b.addEventListener("click",(e)=>{e.stopPropagation();chooseValue(Number(b.dataset.value))}));
   }
   function chooseValue(v){
     selectedValue=v;
     $("valuePanel").classList.add("hidden");$("resultPanel").classList.remove("hidden");
-    $("correctBtn").textContent=`+$${v.toLocaleString()} Correct`;
-    $("wrongBtn").textContent=`−$${v.toLocaleString()} Incorrect`;
+    $("correctBtn").textContent=`+$${v.toLocaleString()}`;
+    $("wrongBtn").textContent=`−$${v.toLocaleString()}`;
   }
   function record(correct){
     if(!selectedValue)return;
@@ -266,7 +265,13 @@
   }
   $("correctBtn").addEventListener("click",()=>record(true));
   $("wrongBtn").addEventListener("click",()=>record(false));
-  $("cancelResult").addEventListener("click",()=>{selectedValue=null;$("resultPanel").classList.add("hidden");$("valuePanel").classList.remove("hidden")});
+  $("playView").addEventListener("click",(e)=>{
+    if(selectedValue===null)return;
+    if(e.target.closest("#resultPanel .choice"))return;
+    selectedValue=null;
+    $("resultPanel").classList.add("hidden");
+    $("valuePanel").classList.remove("hidden");
+  });
   $("undoBtn").addEventListener("click",()=>{
     if(!current.attempts.length)return;
     const a=current.attempts.pop();current.coryat-=a.delta;$("score").textContent=money(current.coryat);$("undoBtn").disabled=current.attempts.length===0;toast("Last attempt removed");
